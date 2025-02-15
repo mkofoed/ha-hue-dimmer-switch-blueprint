@@ -1,6 +1,11 @@
 blueprint:
-  name: deCONZ - Philips Hue Dimmer Switch - Custom Actions (v2/RWL022)
-  description: Customizable actions for Philips Hue Dimmer Switch buttons.
+  name: ZHA - Philips Hue Dimmer Switch - Custom Actions with Defaults (v2/RWL022)
+  description: >
+    Customizable actions for Philips Hue Dimmer Switch buttons with default actions:
+    - Button 1 (ON) Short Press: Toggle the target light.
+    - Button 2 (UP) Short Press: Increase brightness.
+    - Button 3 (DOWN) Short Press: Decrease brightness.
+    Additional actions for holds and Button 4 can be customized.
   domain: automation
   input:
     remote:
@@ -11,41 +16,77 @@ blueprint:
           multiple: false
           model: RWL022
 
+    light_target:
+      name: Target Light
+      description: "Select the light to control with the dimmer switch."
+      selector:
+        entity:
+          domain: light
+
+    brightness_step:
+      name: Brightness Step
+      description: "Brightness adjustment step for UP/DOWN actions."
+      default: 25
+      selector:
+        number:
+          min: 1
+          max: 255
+
     on_press:
       name: Button 1 (ON) - Short press 
-      default: []
+      default:
+        - service: light.toggle
+          target:
+            entity_id: !input light_target
       selector:
         action: {}
+
     on_hold:
       name: Button 1 (ON) - Hold
       default: []
       selector:
         action: {}
+
     up_press:
       name: Button 2 (UP) - Short press 
-      default: []
+      default:
+        - service: light.turn_on
+          target:
+            entity_id: !input light_target
+          data:
+            brightness_step: !input brightness_step
       selector:
         action: {}
+
     up_hold:
       name: Button 2 (UP) - Hold
       default: []
       selector:
         action: {}
+
     down_press:
       name: Button 3 (DOWN) - Short press 
-      default: []
+      default:
+        - service: light.turn_on
+          target:
+            entity_id: !input light_target
+          data:
+            brightness_step: -!input brightness_step
       selector:
         action: {}
+
     down_hold:
       name: Button 3 (DOWN) - Hold 
       default: []
       selector:
         action: {}
+
     off_press:
       name: Button 4 (OFF/Hue) - Short press
       default: []
       selector:
         action: {}
+
     off_hold:
       name: Button 4 (OFF/Hue) - Hold 
       default: []
@@ -57,35 +98,43 @@ max_exceeded: silent
 
 trigger:
   - platform: event
-    event_type: deconz_event
+    event_type: zha_event
     event_data:
       device_id: !input remote
 
 action:
   - variables:
-      event: '{{ trigger.event.data.event }}'
+      cmd: "{{ trigger.event.data.command }}"
   - choose:
-    - conditions:
-      - '{{ event == 1002 }}'
-      sequence: !input on_press
-    - conditions:
-      - '{{ event == 1001 }}'
-      sequence: !input on_hold
-    - conditions:
-      - '{{ event == 2002 }}'
-      sequence: !input up_press
-    - conditions:
-      - '{{ event == 2001 }}'
-      sequence: !input up_hold
-    - conditions:
-      - '{{ event == 3002 }}'
-      sequence: !input down_press
-    - conditions:
-      - '{{ event == 3001 }}'
-      sequence: !input down_hold
-    - conditions:
-      - '{{ event == 4002 }}'
-      sequence: !input off_press
-    - conditions:
-      - '{{ event == 4001 }}'
-      sequence: !input off_hold
+      - conditions:
+          - condition: template
+            value_template: "{{ cmd == 'on_press' }}"
+        sequence: !input on_press
+      - conditions:
+          - condition: template
+            value_template: "{{ cmd == 'on_hold' }}"
+        sequence: !input on_hold
+      - conditions:
+          - condition: template
+            value_template: "{{ cmd == 'up_press' }}"
+        sequence: !input up_press
+      - conditions:
+          - condition: template
+            value_template: "{{ cmd == 'up_hold' }}"
+        sequence: !input up_hold
+      - conditions:
+          - condition: template
+            value_template: "{{ cmd == 'down_press' }}"
+        sequence: !input down_press
+      - conditions:
+          - condition: template
+            value_template: "{{ cmd == 'down_hold' }}"
+        sequence: !input down_hold
+      - conditions:
+          - condition: template
+            value_template: "{{ cmd == 'off_press' }}"
+        sequence: !input off_press
+      - conditions:
+          - condition: template
+            value_template: "{{ cmd == 'off_hold' }}"
+        sequence: !input off_hold
