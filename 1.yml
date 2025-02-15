@@ -18,15 +18,6 @@ blueprint:
       selector:
         area: {}
 
-    on_press:
-      name: Button 1 (ON) - Short press 
-      default:
-        - service: light.toggle
-          target:
-            area_id: !input area_target
-      selector:
-        action: {}
-
 mode: single
 max_exceeded: silent
 
@@ -37,9 +28,9 @@ trigger:
   - platform: event
     event_type: zha_event
 condition: "{{ trigger.event.data.device_id == device_id }}"
-action:
-  - variables:
-      command_type: "{{ trigger.event.data.command }}"
-  - choose:
-      - conditions: '{{ command_type == "on_press" }}'
-        sequence: !input "on_press"
+actions:
+  - action: >
+      {% if trigger.event.data.command == "on_press" %}
+        light.toggle
+      {% endif %}
+    target: !input "area_target"
