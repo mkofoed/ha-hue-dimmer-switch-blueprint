@@ -51,13 +51,7 @@ trigger:
 condition: "{{ trigger.event.data.device_id == device_id }}"
 action:
   - variables:
-      button: "{{ trigger.event.data.args.button }}"
-      press_type: "{{ trigger.event.data.args.press_type }}"
       command_type: "{{ trigger.event.data.command }}"
-
-action:
-  - variables:
-      cmd: "{{ trigger.event.data.command }}"
   - choose:
       - conditions: '{{ command_type == "on_press" }}'
         sequence: !input "on_press"
