@@ -17,14 +17,16 @@ blueprint:
       selector:
         area: {}
 
-triggers:
-  - trigger:
-      - platform: event
-        event_type: zha_event
+trigger:
+  - platform: event
+    event_type: zha_event
 
-actions:
-  - action: >
-      {% if trigger.event.data.command == "on_press" %}
-        light.toggle
-      {% endif %}
-    target: !input area_target
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.data.command == 'on_press' }}"
+        sequence:
+          - service: light.toggle
+            target:
+              area_id: !input area_target
