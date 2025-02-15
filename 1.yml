@@ -18,8 +18,9 @@ blueprint:
         area: {}
 
 triggers:
-  - trigger: event
-    event_type: zha_event
+  - trigger:
+      - platform: event
+        event_type: zha_event
 
 actions:
   - action: >
