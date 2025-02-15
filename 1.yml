@@ -2,7 +2,7 @@ blueprint:
   name: ZHA - Philips Hue Dimmer Switch - Custom Actions with Defaults (v3/RWL022)
   description: >
     Customizable actions for Philips Hue Dimmer Switch buttons with default actions:
-    - Button 1 (ON) Short Press: Toggle the target lights in the specified area.
+    - Button 1 (ON) Short Press: Toggle the target light.
     - Button 2 (UP) Short Press: Increase brightness.
     - Button 3 (DOWN) Short Press: Decrease brightness.
     Additional actions for holds and Button 4 can be customized.
@@ -16,11 +16,12 @@ blueprint:
           multiple: false
           model: RWL022
 
-    area_target:
-      name: Target Area
-      description: "Select the area to control with the dimmer switch."
+    light_target:
+      name: Target Light
+      description: "Select the light to control with the dimmer switch."
       selector:
-        area: {}
+        entity:
+          domain: light
 
     brightness_step:
       name: Brightness Step
@@ -36,7 +37,7 @@ blueprint:
       default:
         - service: light.toggle
           target:
-            area_id: "{{ area_target }}"
+            entity_id: "{{ light_target }}"
       selector:
         action: {}
 
