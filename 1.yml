@@ -33,4 +33,4 @@ actions:
       {% if trigger.event.data.command == "on_press" %}
         light.toggle
       {% endif %}
-    target: !input "area_target"
+    target: !input area_target
