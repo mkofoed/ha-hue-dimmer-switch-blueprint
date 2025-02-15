@@ -17,6 +17,13 @@ blueprint:
       selector:
         area: {}
 
+    action_service:
+      name: Action Service
+      description: "Select the service to call when the dimmer switch is pressed."
+      selector:
+        action: {}
+      default: light.toggle
+
 trigger:
   - platform: event
     event_type: zha_event
@@ -27,6 +34,6 @@ action:
           - condition: template
             value_template: "{{ trigger.event.data.command == 'on_press' }}"
         sequence:
-          - service: light.toggle
+          - service: '{{ action_service }}'
             target:
               area_id: !input area_target
