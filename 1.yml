@@ -1,70 +1,91 @@
 blueprint:
-  name: Philips Hue Dimmer Switch Room Light Control (ZHA)
-  description: >
-    Control a room’s light using a Philips Hue Dimmer Switch (RWL022) paired via ZHA.
-    - Button 1 toggles the light.
-    - Button 2 increases brightness.
-    - Button 3 decreases brightness.
-    - Button 4 is unused.
+  name: deCONZ - Philips Hue Dimmer Switch - Custom Actions (v2/RWL022)
+  description: Customizable actions for Philips Hue Dimmer Switch buttons.
   domain: automation
   input:
-    zha_dimmer:
-      name: ZHA Dimmer Switch
-      description: "Select the Philips Hue Dimmer Switch (RWL022) paired via ZHA for this room."
+    remote:
+      name: Dimmer Switch
       selector:
         device:
           integration: zha
-    light_target:
-      name: Light
-      description: "Select the light to control in this room."
+          multiple: false
+          model: RWL022
+
+    on_press:
+      name: Button 1 (ON) - Short press 
+      default: []
       selector:
-        entity:
-          domain: light
-    brightness_step:
-      name: Brightness Step
-      description: "Amount to change brightness with each press."
-      default: 25
+        action: {}
+    on_hold:
+      name: Button 1 (ON) - Hold
+      default: []
       selector:
-        number:
-          min: 1
-          max: 255
+        action: {}
+    up_press:
+      name: Button 2 (UP) - Short press 
+      default: []
+      selector:
+        action: {}
+    up_hold:
+      name: Button 2 (UP) - Hold
+      default: []
+      selector:
+        action: {}
+    down_press:
+      name: Button 3 (DOWN) - Short press 
+      default: []
+      selector:
+        action: {}
+    down_hold:
+      name: Button 3 (DOWN) - Hold 
+      default: []
+      selector:
+        action: {}
+    off_press:
+      name: Button 4 (OFF/Hue) - Short press
+      default: []
+      selector:
+        action: {}
+    off_hold:
+      name: Button 4 (OFF/Hue) - Hold 
+      default: []
+      selector:
+        action: {}
+
+mode: restart
+max_exceeded: silent
 
 trigger:
-  - platform: device
-    device_id: !input zha_dimmer
-    domain: zha
-    type: command_received
+  - platform: event
+    event_type: deconz_event
+    event_data:
+      device_id: !input remote
 
 action:
+  - variables:
+      event: '{{ trigger.event.data.event }}'
   - choose:
-      # Button 1: Toggle the light (command "toggle")
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.command == 'toggle' }}"
-        sequence:
-          - service: light.toggle
-            target:
-              entity_id: !input light_target
-
-      # Button 2: Increase brightness (command "brightness_move_up")
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.command == 'brightness_move_up' }}"
-        sequence:
-          - service: light.turn_on
-            target:
-              entity_id: !input light_target
-            data:
-              brightness_step: !input brightness_step
-
-      # Button 3: Decrease brightness (command "brightness_move_down")
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.command == 'brightness_move_down' }}"
-        sequence:
-          - service: light.turn_on
-            target:
-              entity_id: !input light_target
-            data:
-              brightness_step: -!input brightness_step
-mode: single
+    - conditions:
+      - '{{ event == 1002 }}'
+      sequence: !input on_press
+    - conditions:
+      - '{{ event == 1001 }}'
+      sequence: !input on_hold
+    - conditions:
+      - '{{ event == 2002 }}'
+      sequence: !input up_press
+    - conditions:
+      - '{{ event == 2001 }}'
+      sequence: !input up_hold
+    - conditions:
+      - '{{ event == 3002 }}'
+      sequence: !input down_press
+    - conditions:
+      - '{{ event == 3001 }}'
+      sequence: !input down_hold
+    - conditions:
+      - '{{ event == 4002 }}'
+      sequence: !input off_press
+    - conditions:
+      - '{{ event == 4001 }}'
+      sequence: !input off_hold
