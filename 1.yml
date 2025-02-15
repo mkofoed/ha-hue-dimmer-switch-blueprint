@@ -1,0 +1,70 @@
+blueprint:
+  name: Philips Hue Dimmer Switch Room Light Control (ZHA)
+  description: >
+    Control a room’s light using a Philips Hue Dimmer Switch (RWL022) paired via ZHA.
+    - Button 1 toggles the light.
+    - Button 2 increases brightness.
+    - Button 3 decreases brightness.
+    - Button 4 is unused.
+  domain: automation
+  input:
+    zha_dimmer:
+      name: ZHA Dimmer Switch
+      description: "Select the Philips Hue Dimmer Switch (RWL022) paired via ZHA for this room."
+      selector:
+        device:
+          integration: zha
+    light_target:
+      name: Light
+      description: "Select the light to control in this room."
+      selector:
+        entity:
+          domain: light
+    brightness_step:
+      name: Brightness Step
+      description: "Amount to change brightness with each press."
+      default: 25
+      selector:
+        number:
+          min: 1
+          max: 255
+
+trigger:
+  - platform: device
+    device_id: !input zha_dimmer
+    domain: zha
+    type: command_received
+
+action:
+  - choose:
+      # Button 1: Toggle the light (command "toggle")
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.data.command == 'toggle' }}"
+        sequence:
+          - service: light.toggle
+            target:
+              entity_id: !input light_target
+
+      # Button 2: Increase brightness (command "brightness_move_up")
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.data.command == 'brightness_move_up' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light_target
+            data:
+              brightness_step: !input brightness_step
+
+      # Button 3: Decrease brightness (command "brightness_move_down")
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.data.command == 'brightness_move_down' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light_target
+            data:
+              brightness_step: -!input brightness_step
+mode: single
