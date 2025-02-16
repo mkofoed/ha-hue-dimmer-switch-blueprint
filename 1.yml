@@ -1,6 +1,11 @@
 blueprint:
-  name: TEST
-  description: TEST
+  name: ZHA Dimmer Switch Area Controller
+  description: >
+    This automation blueprint allows you to control lights in a specified area
+    using a ZHA dimmer switch. When the dimmer switch is pressed, it toggles
+    the lights in the selected area. You can customize the action to perform
+    other services if needed. The automation ensures that only the switch within
+    the specified area triggers the action.
   domain: automation
   input:
     remote:
@@ -16,10 +21,22 @@ blueprint:
       description: "Select the area to control with the dimmer switch."
       selector:
         area: {}
+    
+    action_service:
+      name: Action Service
+      description: Select the service to call when the dimmer switch is pressed.
+      selector:
+        action: {}
+      default: light.toggle
 
 trigger:
   - platform: event
     event_type: zha_event
+    event_data:
+      device_id: !input remote
+condition:
+  - condition: template
+    value_template: "{{ device_attr(remote, 'area_id') == area_target }}"
 
 action:
   - choose:
@@ -27,6 +44,6 @@ action:
           - condition: template
             value_template: "{{ trigger.event.data.command == 'on_press' }}"
         sequence:
-          - service: light.toggle
+          - service: '{{ action_service }}'
             target:
               area_id: !input area_target
